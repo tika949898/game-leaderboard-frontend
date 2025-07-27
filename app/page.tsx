@@ -1,8 +1,3 @@
-export const metadata = {
-  title: 'Game Leaderboard | Tikaram',
-  description: 'Track player scores in real-time with history, dark mode, and more.',
-};
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -227,7 +222,7 @@ export default function Home() {
 
         <section role="region" aria-labelledby="leaderboard-heading" className="mt-10">
           <h2 id="leaderboard-heading" className="text-2xl font-semibold mb-2">
-            🏆 Top 10 Players
+            Top 10 Players
           </h2>
 
           <ul className="space-y-2">
