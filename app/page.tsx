@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'Game Leaderboard | Tikaram',
+  description: 'Track player scores in real-time with history, dark mode, and more.',
+};
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
