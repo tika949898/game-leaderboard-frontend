@@ -14,6 +14,7 @@ type HistoryItem = {
 };
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+console.log("🔗 Backend URL from env:", BACKEND_URL);
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -25,25 +26,6 @@ export default function Home() {
   const [announcement, setAnnouncement] = useState('');
   const scoreInputRef = useRef<HTMLInputElement>(null);
   const announcementRef = useRef<HTMLDivElement>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const login = async () => {
-      const res = await fetch(`${BACKEND_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'admin', password: 'admin' }),
-      });
-
-      const data = await res.json();
-      if (data.access_token) {
-        localStorage.setItem('access_token', data.access_token);
-        setToken(data.access_token);
-      }
-    };
-
-    login();
-  }, []);
 
   const fetchLeaderboard = async () => {
     const res = await fetch(`${BACKEND_URL}/leaderboard`);
@@ -52,26 +34,18 @@ export default function Home() {
   };
 
   const fetchHistory = async (playerName: string) => {
-    if (!token) return;
-    const res = await fetch(`${BACKEND_URL}/history/${playerName}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(`${BACKEND_URL}/history/${playerName}`);
     const data = await res.json();
     setHistory(data);
   };
 
   const submitScore = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !score || !token) return;
+    if (!name || !score) return;
 
     await fetch(`${BACKEND_URL}/score`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ player: name, score: Number(score) }),
     });
 
@@ -87,6 +61,17 @@ export default function Home() {
     setScore('');
   };
 
+  const resetLeaderboard = async () => {
+    await fetch(`${BACKEND_URL}/reset`, {
+      method: 'DELETE',
+    });
+    fetchLeaderboard();
+    setAnnouncement('Leaderboard reset');
+    setTimeout(() => {
+      announcementRef.current?.focus();
+    }, 100);
+  };
+
   useEffect(() => {
     fetchLeaderboard();
     const interval = setInterval(fetchLeaderboard, 5000);
@@ -97,13 +82,11 @@ export default function Home() {
     const handleKey = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
       const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-
       if (!isTyping && e.key.toLowerCase() === 's') {
         e.preventDefault();
         scoreInputRef.current?.focus();
       }
     };
-
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
@@ -200,20 +183,7 @@ export default function Home() {
         </form>
 
         <button
-          onClick={async () => {
-            if (!token) return;
-            await fetch(`${BACKEND_URL}/reset`, {
-              method: 'DELETE',
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-            fetchLeaderboard();
-            setAnnouncement('Leaderboard reset');
-            setTimeout(() => {
-              announcementRef.current?.focus();
-            }, 100);
-          }}
+          onClick={resetLeaderboard}
           className="ml-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
           aria-label="Reset all scores and clear leaderboard"
         >
